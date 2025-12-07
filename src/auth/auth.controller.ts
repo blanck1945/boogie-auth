@@ -8,10 +8,11 @@ export class AuthController {
   private readonly defaultCallback =
     process.env.HOST_CALLBACK_URL || 'http://localhost:5173';
 
-  // 1) PÁGINA DE LOGIN + SETEO DE relayState EN SESIÓN
+  // 1) PÁGINA DE LOGIN + SETEO DE relayState EN FORM
   @Get('login')
   getLoginPage(
     @Query('from_url') fromUrl: string,
+    @Query('env') env: 'dev' | 'prod' = 'dev', // 👈 viene desde el front
     @Req() req: Request,
     @Res() res: Response,
   ) {
@@ -27,14 +28,13 @@ export class AuthController {
       body {
         margin: 0;
         padding: 0;
-        background: #e3f2fd; /* azul claro */
+        background: #e3f2fd;
         font-family: Arial, sans-serif;
         display: flex;
         align-items: center;
         justify-content: center;
         height: 100vh;
       }
-
       .card {
         background: white;
         padding: 30px 40px;
@@ -43,20 +43,17 @@ export class AuthController {
         width: 350px;
         text-align: center;
       }
-
       h1 {
         margin-bottom: 20px;
         color: #1976d2;
         font-size: 26px;
       }
-
       label {
         font-size: 14px;
         display: block;
         margin-bottom: 6px;
         text-align: left;
       }
-
       input {
         width: 100%;
         padding: 10px;
@@ -65,7 +62,6 @@ export class AuthController {
         border-radius: 6px;
         font-size: 14px;
       }
-
       button {
         width: 100%;
         background: #1976d2;
@@ -76,7 +72,6 @@ export class AuthController {
         font-size: 16px;
         cursor: pointer;
       }
-
       button:hover {
         background: #0d47a1;
       }
@@ -88,6 +83,7 @@ export class AuthController {
 
       <form method="POST" action="/login">
         <input type="hidden" name="relayState" value="${relayState}" />
+        <input type="hidden" name="env" value="${env}" /> <!-- 👈 preservamos env -->
 
         <div>
           <label>Username</label>
@@ -107,29 +103,34 @@ export class AuthController {
 `);
   }
 
-  // 2) PROCESAR LOGIN, GUARDAR USER EN SESIÓN Y USAR relayState
+  // 2) PROCESAR LOGIN, USAR relayState + env DEL BODY
   @Post('login')
   async login(
-    @Body() body: LoginDto,
-    @Req() req: Request,
+    @Body() body: LoginDto & { env?: 'dev' | 'prod'; relayState?: string },
     @Res() res: Response,
   ) {
-    const { username, password, relayState } = body;
+    const { username, password, relayState, env } = body;
 
-    // TODO: reemplazar por lógica real (DB, hash, etc.)
     if (username !== 'admin' || password !== 'admin') {
       return res.status(401).send('Credenciales inválidas');
     }
 
-    // Origen del FRONT que hizo la request
-    const origin = req.get('origin') || '';
-    console.log('🔵 FRONT ORIGIN:', origin);
+    const envToUse = env === 'prod' ? 'prod' : 'dev';
 
-    const redirectUrl = `${origin}/user/login?relayState=${encodeURIComponent(
+    const baseUrl =
+      envToUse === 'prod'
+        ? process.env.APPLICATIONS_PROD_URL
+        : process.env.APPLICATIONS_DEV_URL;
+
+    if (!baseUrl) {
+      throw new Error(`No está configurada la base URL para env=${envToUse}`);
+    }
+
+    const redirectUrl = `${baseUrl}/user/login?relayState=${encodeURIComponent(
       relayState || '',
     )}&user=${username}&email=admin@example.com`;
 
-    console.log('➡️ redirigiendo a:', redirectUrl);
+    console.log('➡️ Redirigiendo a:', redirectUrl);
 
     return res.redirect(redirectUrl);
   }
