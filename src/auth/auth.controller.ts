@@ -121,9 +121,16 @@ export class AuthController {
       return res.status(401).send('Credenciales inválidas');
     }
 
-    // Redirigir al host usando relayState
-    return res.redirect(
-      `https://boogie-applications-production.up.railway.app/user/login?relayState=${encodeURIComponent(relayState || '')}&user=${username}&email=admin@example.com`,
-    );
+    // Origen del FRONT que hizo la request
+    const origin = req.get('origin') || '';
+    console.log('🔵 FRONT ORIGIN:', origin);
+
+    const redirectUrl = `${origin}/user/login?relayState=${encodeURIComponent(
+      relayState || '',
+    )}&user=${username}&email=admin@example.com`;
+
+    console.log('➡️ redirigiendo a:', redirectUrl);
+
+    return res.redirect(redirectUrl);
   }
 }
