@@ -6,10 +6,7 @@ async function bootstrap() {
 
   // Por si en algún momento llamás algo vía fetch/XHR
   app.enableCors({
-    origin: [
-      'http://localhost:5173', // tu host frontend
-      'http://127.0.0.1:5173',
-    ],
+    origin: true,
     credentials: true,
   });
 
