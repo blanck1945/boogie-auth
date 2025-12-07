@@ -123,7 +123,7 @@ export class AuthController {
 
     // Redirigir al host usando relayState
     return res.redirect(
-      `http://localhost:3000/user/login?relayState=${encodeURIComponent(relayState || '')}&user=${username}&email=admin@example.com`,
+      `https://boogie-applications-production.up.railway.app/user/login?relayState=${encodeURIComponent(relayState || '')}&user=${username}&email=admin@example.com`,
     );
   }
 }
