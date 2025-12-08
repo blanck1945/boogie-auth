@@ -92,7 +92,12 @@ export class AuthController {
 
         <div>
           <label>Password</label>
-          <input type="password" name="password" autocomplete="current-password"/>
+          <input 
+            type="password" 
+            name="password" 
+            autocomplete="new-password"
+            data-lpignore="true"    
+          />
         </div>
 
         <button type="submit">Entrar</button>
